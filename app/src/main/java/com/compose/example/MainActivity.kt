@@ -9,7 +9,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import com.compose.example.ui.theme.JetPackComposeExamples1Theme
 
 class MainActivity : ComponentActivity() {
@@ -22,7 +27,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+//                    Greeting("Android")
+                    TextFunction()
                 }
             }
         }
@@ -37,10 +43,23 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun GreetingPreview() {
     JetPackComposeExamples1Theme {
-        Greeting("Android")
+//        Greeting("Android")
+          TextFunction()
     }
 }
+
+@Composable
+private fun TextFunction() {
+    Text(text = "Hello World",
+        fontStyle = FontStyle.Italic,
+        fontWeight = FontWeight.ExtraBold,
+        color = Color.Red,
+        fontSize = 16.sp,
+        textAlign = TextAlign.Left)
+}
+
+
