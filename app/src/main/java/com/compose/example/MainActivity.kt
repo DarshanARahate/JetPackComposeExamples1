@@ -18,14 +18,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.compose.example.ui.theme.JetPackComposeExamples1Theme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,8 +42,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
-                    NotificationScreen()
+                    Column {
+                        LaunchEffectComposable()
+                        CoroutineScopeComposable()
+                    }
+
                 }
             }
         }
@@ -62,45 +70,57 @@ fun GreetingPreview() {
 }
 
 @Composable
-fun NotificationScreen() {
-    var count: MutableState<Int> = rememberSaveable { mutableStateOf(0) }
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize(1f)
-    ) {
-        NotificationCounter(count.value) { count.value++ }
-        MessageBar(count.value)
-    }
-}
+fun LaunchEffectComposable() {
+    val counter = remember { mutableStateOf(0) }
 
-@Composable
-fun NotificationCounter(count: Int, increment: () -> Int) {
-
-    Column(verticalArrangement = Arrangement.Center) {
-        Text(text = "You have sent ${count} notification")
-        Button(onClick = {
-            increment()
-            Log.d("CODERSTAG", "Button Clicked")
-        }) {
-            Text(text = "Send Notification")
+    LaunchedEffect(key1 = Unit) {
+        Log.d("LaunchEffectComposable", "Started")
+        try {
+            for (i in 1..10) {
+                counter.value++
+                delay(1000)
+            }
+        } catch (e: Exception) {
+            Log.d("LaunchEffectComposable", "Exception ${e.message}")
         }
     }
+    var text = "Counter is running ${counter.value}"
+    if (counter.value == 10) {
+        text = "Counter Stopped"
+    }
+    Text(text = text)
 }
 
 @Composable
-fun MessageBar(count: Int) {
-    Card {
-        Row(
-            modifier = Modifier.padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                imageVector = Icons.Outlined.Favorite,
-                contentDescription = "",
-                Modifier.padding(4.dp)
-            )
-            Text(text = "Messages Sent so far - $count")
+fun CoroutineScopeComposable() {
+    val counter = remember {
+        mutableStateOf(0)
+    }
+
+    var scope = rememberCoroutineScope()
+
+    var text = "Counter is running ${counter.value}"
+
+    if (counter.value == 10) {
+        text = "Counter stopped"
+    }
+
+    Column {
+        Text(text = text)
+        Button(onClick = {
+            scope.launch {
+                Log.d("CoroutineScopeComposable", "Started..")
+                try {
+                    for (i in 1..10) {
+                        counter.value++
+                        delay(1000)
+                    }
+                } catch (e: Exception) {
+                    Log.d("CoroutineScopeComposable", "Exception = ${e.message}")
+                }
+            }
+        }) {
+            Text(text = "Start")
         }
     }
 }
