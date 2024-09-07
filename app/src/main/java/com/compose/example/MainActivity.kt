@@ -18,8 +18,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +40,9 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Greeting("Android")
-                    NotificationScreen()
+                    Column {
+                        Counter()
+                    }
                 }
             }
         }
@@ -62,45 +66,20 @@ fun GreetingPreview() {
 }
 
 @Composable
-fun NotificationScreen() {
-    var count: MutableState<Int> = rememberSaveable { mutableStateOf(0) }
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize(1f)
-    ) {
-        NotificationCounter(count.value) { count.value++ }
-        MessageBar(count.value)
+fun Counter() {
+    var count = remember {
+        mutableStateOf(0)
+    }
+    var key = count.value % 3 == 0
+
+    LaunchedEffect(key1 = key) {
+        println("TAGGED : Current count ${count.value}")
+    }
+
+    Button(onClick = { count.value++ }) {
+        Text(text = "Increment Count")
     }
 }
 
-@Composable
-fun NotificationCounter(count: Int, increment: () -> Int) {
 
-    Column(verticalArrangement = Arrangement.Center) {
-        Text(text = "You have sent ${count} notification")
-        Button(onClick = {
-            increment()
-            Log.d("CODERSTAG", "Button Clicked")
-        }) {
-            Text(text = "Send Notification")
-        }
-    }
-}
 
-@Composable
-fun MessageBar(count: Int) {
-    Card {
-        Row(
-            modifier = Modifier.padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                imageVector = Icons.Outlined.Favorite,
-                contentDescription = "",
-                Modifier.padding(4.dp)
-            )
-            Text(text = "Messages Sent so far - $count")
-        }
-    }
-}
