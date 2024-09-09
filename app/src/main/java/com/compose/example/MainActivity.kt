@@ -20,9 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,11 +44,17 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Column {
-                        LaunchEffectComposable()
-                        CoroutineScopeComposable()
+                    var counter = remember {
+                        mutableStateOf(0)
                     }
-
+                    LaunchedEffect(key1 = Unit) {
+                        delay(2000)
+                        counter.value = 10
+                    }
+                    Column {
+                        RememberUpdatedStateComposable(counter.value)
+                        App()
+                    }
                 }
             }
         }
@@ -70,57 +78,36 @@ fun GreetingPreview() {
 }
 
 @Composable
-fun LaunchEffectComposable() {
-    val counter = remember { mutableStateOf(0) }
+fun RememberUpdatedStateComposable(value: Int) {
+    val state = rememberUpdatedState(newValue = value)
 
     LaunchedEffect(key1 = Unit) {
-        Log.d("LaunchEffectComposable", "Started")
-        try {
-            for (i in 1..10) {
-                counter.value++
-                delay(1000)
-            }
-        } catch (e: Exception) {
-            Log.d("LaunchEffectComposable", "Exception ${e.message}")
-        }
+        delay(5000)
+        Log.d("RememberUpdatedState", state.value.toString())
     }
-    var text = "Counter is running ${counter.value}"
-    if (counter.value == 10) {
-        text = "Counter Stopped"
+    Text(text = value.toString())
+}
+
+fun a() { Log.d("RememberUpdatedState","I am A from App")  }
+
+fun b() { Log.d("RememberUpdatedState","I am B from App")  }
+
+@Composable
+fun App() {
+    var state = remember {
+        mutableStateOf(::a)
     }
-    Text(text = text)
+    Button(onClick = { state.value = ::b }) {
+        Text(text = "Click to change state")
+    }
+    LandingScreen(state.value)
 }
 
 @Composable
-fun CoroutineScopeComposable() {
-    val counter = remember {
-        mutableStateOf(0)
-    }
-
-    var scope = rememberCoroutineScope()
-
-    var text = "Counter is running ${counter.value}"
-
-    if (counter.value == 10) {
-        text = "Counter stopped"
-    }
-
-    Column {
-        Text(text = text)
-        Button(onClick = {
-            scope.launch {
-                Log.d("CoroutineScopeComposable", "Started..")
-                try {
-                    for (i in 1..10) {
-                        counter.value++
-                        delay(1000)
-                    }
-                } catch (e: Exception) {
-                    Log.d("CoroutineScopeComposable", "Exception = ${e.message}")
-                }
-            }
-        }) {
-            Text(text = "Start")
-        }
+fun LandingScreen(onTimeOut: () -> Unit) {
+    val currentOnTimeout by rememberUpdatedState(newValue = onTimeOut)
+    LaunchedEffect(key1 = true) {
+        delay(5000)
+        currentOnTimeout()
     }
 }
