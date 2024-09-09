@@ -2,6 +2,7 @@ package com.compose.example
 
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -17,7 +18,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -28,8 +31,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.compose.example.ui.theme.JetPackComposeExamples1Theme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,16 +50,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var counter = remember {
-                        mutableStateOf(0)
-                    }
-                    LaunchedEffect(key1 = Unit) {
-                        delay(2000)
-                        counter.value = 10
-                    }
                     Column {
-                        RememberUpdatedStateComposable(counter.value)
-                        App()
+                        App1()
+                        App2()
+                        TextField(value = "", onValueChange = { })
                     }
                 }
             }
@@ -88,26 +88,42 @@ fun RememberUpdatedStateComposable(value: Int) {
     Text(text = value.toString())
 }
 
-fun a() { Log.d("RememberUpdatedState","I am A from App")  }
-
-fun b() { Log.d("RememberUpdatedState","I am B from App")  }
-
 @Composable
-fun App() {
+fun App1() {
     var state = remember {
-        mutableStateOf(::a)
+        mutableStateOf(false)
     }
-    Button(onClick = { state.value = ::b }) {
+
+    DisposableEffect(key1 = state.value) {
+        Log.d("DisposableEffect Log:", "Disposable Effect Started")
+        onDispose {
+            Log.d("DisposableEffect Log:", "Cleaning up side effects")
+        }
+    }
+
+    Button(onClick = { state.value = !state.value }) {
         Text(text = "Click to change state")
     }
-    LandingScreen(state.value)
 }
 
 @Composable
-fun LandingScreen(onTimeOut: () -> Unit) {
-    val currentOnTimeout by rememberUpdatedState(newValue = onTimeOut)
-    LaunchedEffect(key1 = true) {
-        delay(5000)
-        currentOnTimeout()
+fun App2() {
+    val view = LocalView.current
+
+    DisposableEffect(key1 = Unit) {
+        val listener = ViewTreeObserver.OnGlobalLayoutListener {
+            val insets = ViewCompat.getRootWindowInsets(view)
+            val isKeyboardVisible = insets?.isVisible(WindowInsetsCompat.Type.ime())
+            Log.d("DisposableEffect TAG:", isKeyboardVisible.toString())
+        }
+        view.viewTreeObserver.addOnGlobalLayoutListener(listener)
+
+        Log.d("DisposableEffect Log:", "Disposable Effect Started")
+        onDispose {
+            view.viewTreeObserver.removeOnGlobalLayoutListener(listener)
+            Log.d("DisposableEffect Log:", "Cleaning up side effects")
+        }
     }
+
+
 }
