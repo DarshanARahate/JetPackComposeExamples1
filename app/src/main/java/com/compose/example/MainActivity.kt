@@ -1,5 +1,6 @@
 package com.compose.example
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.ViewTreeObserver
@@ -7,11 +8,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.Icons.Default
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -23,14 +28,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,14 +59,15 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column {
-                        App1()
-                        App2()
-                        TextField(value = "", onValueChange = { })
+                        Derived()
+                        Loader()
                     }
                 }
             }
         }
     }
+
+
 }
 
 @Composable
@@ -77,53 +86,52 @@ fun GreetingPreview() {
     }
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
-fun RememberUpdatedStateComposable(value: Int) {
-    val state = rememberUpdatedState(newValue = value)
-
-    LaunchedEffect(key1 = Unit) {
-        delay(5000)
-        Log.d("RememberUpdatedState", state.value.toString())
+private fun Derived() {
+    val tableOf = remember {
+        mutableStateOf(5)
     }
-    Text(text = value.toString())
+
+    val index = produceState(initialValue = 1) {
+        repeat(9) {
+            delay(1000)
+            value += 1
+        }
+    }
+
+    val message = derivedStateOf {
+        "${tableOf.value} * ${index.value} = ${tableOf.value * index.value}"
+    }
+
+    Box{
+        Text(text = message.value, style = MaterialTheme.typography.labelLarge)
+    }
+
+
 }
 
 @Composable
-fun App1() {
-    var state = remember {
-        mutableStateOf(false)
-    }
-
-    DisposableEffect(key1 = state.value) {
-        Log.d("DisposableEffect Log:", "Disposable Effect Started")
-        onDispose {
-            Log.d("DisposableEffect Log:", "Cleaning up side effects")
+fun Loader() {
+    val degree = produceState(initialValue = 0) {
+        while (true) {
+            delay(160)
+            value = (value + 30) % 360
         }
     }
 
-    Button(onClick = { state.value = !state.value }) {
-        Text(text = "Click to change state")
-    }
-}
-
-@Composable
-fun App2() {
-    val view = LocalView.current
-
-    DisposableEffect(key1 = Unit) {
-        val listener = ViewTreeObserver.OnGlobalLayoutListener {
-            val insets = ViewCompat.getRootWindowInsets(view)
-            val isKeyboardVisible = insets?.isVisible(WindowInsetsCompat.Type.ime())
-            Log.d("DisposableEffect TAG:", isKeyboardVisible.toString())
-        }
-        view.viewTreeObserver.addOnGlobalLayoutListener(listener)
-
-        Log.d("DisposableEffect Log:", "Disposable Effect Started")
-        onDispose {
-            view.viewTreeObserver.removeOnGlobalLayoutListener(listener)
-            Log.d("DisposableEffect Log:", "Cleaning up side effects")
-        }
-    }
-
-
+    Box(
+//        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize(1f),
+        content = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    imageVector = Default.Refresh, contentDescription = "",
+                    modifier = Modifier
+                        .size(60.dp)
+                        .rotate(degree.value.toFloat())
+                )
+                Text(text = "Loading...")
+            }
+        })
 }
